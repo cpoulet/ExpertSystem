@@ -2,7 +2,7 @@
 
 import sys, string
 
-symboles = ['(',')','!','+','|','^','=>','<=>','=', '?']
+symboles = ['(',')','!','+','|','^','=>','<=>','=','?']
 leafs = []
 queries = []
 
@@ -13,6 +13,9 @@ class Fact():
 			exit()
 		self.name = name
 		self.state = False
+
+def rule_error():
+	print ("Wrong rules")
 
 def remove_comment(string):
 	rules = []
@@ -29,27 +32,34 @@ def get_leafs(rule):
 			leafs.append(c)
 		else:
 			print('Wrong initial facts')
+	print(leafs)
 	return
 
 def get_queries(rule):
 	global queries
 	for c in rule:
 		if c in string.ascii_uppercase:
-			queriess.append(c)
+			queries.append(c)
 		else:
 			print('Wrong queries')
+	print(queries)
 	return
 
 def check_rule(rule):
-	if (rule[0] == '='):
-		get_leafs(rule[1:])
-	elif (rule[0] == '?'):
-		get_queries(rule[1:])
+	if rule.count('=>') >= 2:
+		rule_error()
+	else:
+		rule = rule.partition('<=>' if rule.count('<=>') else '=>')
+		print(rule)
 
 def knowledge_base(rules):
 	for rule in rules:
-		check_rule(rule.split())
-		print(rule.split())
+		if rule[0] == '=':
+			get_leafs(rule[1:].strip())
+		elif rule[0] == '?':
+			get_queries(rule[1:].strip())
+		else:
+			check_rule(rule)
 
 def main(argv):
 	if (len(argv) != 2):
