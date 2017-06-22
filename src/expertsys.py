@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import sys, string, re
+import argparse, re, os
 
 symboles    = ['(',')','!','+','|','^','=>','<=>','=','?']
 node_type   = ['fact', 'root', 'op_not', 'op_and', 'op_xor']
@@ -131,6 +131,7 @@ def grow_tree(node, goal):
     symbols = [symbol for symbol in goal[0].split() if symbol in string.ascii_uppercase]
     for symbol in symbols:
         for goal in knowledges:
+            print(goal)
             if goal[2] and symbol in goal[1]:   #problem with !X
                 node.add_child(Nodes(symbol))
                 goal[2] = 0
@@ -145,24 +146,57 @@ def solving_querie(querie):
             grow_tree(root, goal)
             root.p_breadth()
 
-def main(argv):
-    global queries
-    global verbose
-    if (len(argv) not in [2, 3]):
-        print ("Wrong number of arguments.")
-        return
-    if '-v' in argv :
-        verbose = 1
-        argv.remove('-v')
-        print('Verbosity activated')
-    try:
-        text = open(argv[1], 'r').read()
-        rules = remove_comment(text)
-        knowledges = knowledge_base(rules)
-        for querie in queries:
-            solving_querie(querie)
-    except FileNotFoundError as e:
-        print ("Error occurred :", e)
+class Expertsystem:
+
+    def __init__(self, verbose):
+        self._verbose       = verbose
+        self._leafs         = []
+        self._queries       = []
+        self._knowledges    = []
+
+    def parse_file(self, input_):
+        with open(input_, 'r') as f:
+            for l in f:
+                l = re.sub(r'\s', '', l.split('#')[0])
+
+                if not l:
+                    continue
+
+                if l[0] == '=':
+                    if re.search(r'[^A-Z]', l[1:]):
+                        raise Exception('Parsing error : Wrong initial facts')
+                    self._leafs = list(l[1:])
+
+                elif l[0] == '?':
+                    if re.search(r'[^A-Z]', l[1:]):
+                        raise Exception('Parsing error : Wrong queries')
+                    self._queries = list(l[1:])
+
+                else:
+                    s = re.search(r'(^[A-Z+|()!^]+)(<?)=>([A-Z+|()!^]+$)', l)
+                    if not s:
+                        raise Exception('Parsing error : Wrong rules')
+                    self._knowledges.append([s.group(1), s.group(3)])
+                    if s.group(2):
+                        self._knowledges.append([s.group(3), s.group(1)])
+
+        if self._verbose:
+            print('Leafs = ' + str(self._leafs))
+            print('Queries = ' + str(self._queries))
+            print(*self._knowledges, sep='\n')
+
+def main():
+    parser = argparse.ArgumentParser(description='Read a Knowledge base then answer the queries.')
+    parser.add_argument('input_', action='store', help='Input file describing the rules.')
+    parser.add_argument('-v', '--verbose', action='store_true', help='verbose mode')
+    args = parser.parse_args()
+    if not os.path.exists(args.input_) or not os.path.isfile(args.input_):
+        raise Exception('File not found: "' + args.input_ + '".')
+    e = Expertsystem(args.verbose)
+    e.parse_file(args.input_)
 
 if __name__ == "__main__":
-   main(sys.argv)
+    try:
+        main()
+    except Exception as e:
+        print('Error : ' + str(e))
