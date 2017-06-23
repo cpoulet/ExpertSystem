@@ -20,10 +20,11 @@ class ExprEvaluator:
 
     Here is the BNF grammar I used :
 
-    <expr>      ::= <or> {'^' <or>}
-    <or>        ::= <and> {'|' <and>}
-    <and>       ::= <factor> {'+' <factor>}
-    <factor>    ::= '('<expr>')' | '!'<factor> | FACT
+    <expr>      ::= <or> {'^' <expr>}
+    <or>        ::= <and> {'|' <or>}
+    <and>       ::= <factor> {'+' <and>}
+    <not>       ::= '!'<not> | <factor>
+    <factor>    ::= '('<expr>')' | FACT
     '''
 
     def __init__(self):
@@ -60,39 +61,37 @@ class ExprEvaluator:
 
     def _expr(self):
         '''
-        <expr> ::= <or> {'^' <or>}
+        <expr> ::= <or> {'^' <expr>}
         '''
         expr_value = self._or()
         while self._accept('XOR'):
-            return expr_value | self._or()
+            return expr_value ^ self._expr()
         return expr_value
             
     def _or(self):
         '''
-        <or> ::= <and> {'|' <and>}
+        <or> ::= <and> {'|' <or>}
         '''
         or_value = self._and()
         while self._accept('OR'):
-            return or_value | self._and()
+            return or_value | self._or()
         return or_value
         
     def _and(self):
         '''
-        <and> ::= <factor> {'+' <factor>}
+        <and> ::= <factor> {'+' <and>}
         '''
         and_value = self._factor()
         while self._accept('AND'):
-            return and_value and self._factor()
+            return and_value and self._and()
         return and_value
 
     def _factor(self):
         '''
-        <factor> ::= '('<expr>')' | '!'<factor> | FACT
+        <factor> ::= '('<expr>')' | <fact>
         '''
         if self._accept('FACT'):
-            return True                 #self.current_token.value
-        elif self._accept('NOT'):
-            return not self._factor()
+            return True if self.current_token.value == 'A' else False
         elif self._accept('LB'):
             expr_value = self._expr()
             self._expect('RB')
@@ -107,8 +106,7 @@ def main(argv):
     print(e.parse(argv[1]))
 
 if __name__ == "__main__":
-    main(sys.argv)
-#    try:
-#	    main(sys.argv)
-#    except Exception as e:
-#        print('Error : ' + str(e))
+    try:
+	    main(sys.argv)
+    except Exception as e:
+        print('Error : ' + str(e))
