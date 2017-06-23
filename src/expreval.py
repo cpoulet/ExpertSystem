@@ -3,6 +3,7 @@
 import sys
 import re
 import collections
+import unittest
 
 Token = collections.namedtuple('Token', ['type_', 'value'])
 
@@ -10,6 +11,8 @@ def tokenize(expr, tokens_spec):
     '''Token Generator'''
     token_regex = re.compile('|'.join('(?P<%s>%s)' % pair for pair in tokens_spec))
     for item in re.finditer(token_regex, expr):
+        if item.lastgroup == 'ERROR':
+            raise Exception('Very wrong token.')
         if not item.lastgroup == 'WS':
             yield Token(item.lastgroup, item.group())
 
@@ -37,6 +40,7 @@ class ExprEvaluator:
         ('RB' , r'\)'),
         ('FACT' , r'[A-Z]'),
         ('WS' , r'\s')]
+        ('ERROR' , r'[^A-Z\s()!^+|]')]
 
     def parse(self, expr):
         self.token_generator = tokenize(expr, self.TOKENS_SPEC)
@@ -81,23 +85,96 @@ class ExprEvaluator:
         '''
         <and> ::= <factor> {'+' <and>}
         '''
-        and_value = self._factor()
+        and_value = self._not()
         while self._accept('AND'):
-            return and_value and self._and()
+            return and_value & self._and()
         return and_value
+
+    def _not(self):
+        '''
+        <not> ::= '!'<not> | <factor>
+        '''
+        if self._accept('NOT'):
+            return not self._not()
+        return self._factor()
 
     def _factor(self):
         '''
         <factor> ::= '('<expr>')' | <fact>
         '''
         if self._accept('FACT'):
-            return True if self.current_token.value == 'A' else False
+            return True if self.current_token.value == 'T' else False
+            #return int(self.current_token.value)
         elif self._accept('LB'):
             expr_value = self._expr()
             self._expect('RB')
             return expr_value
         else:
             raise Exception('Expected a FACT or a Left Brace')
+
+class MyTest(unittest.TestCase):
+    """Tests for `expreval."""
+
+#    def error_test(self):
+#        e = ExprEvaluator()
+#        self.assertEqual(e.parse('T +'), True)
+
+    def test_test(self):
+        e = ExprEvaluator()
+        self.assertEqual(e.parse('T'), True)
+        self.assertEqual(e.parse('F'), False)
+
+    def test_negate(self):
+        e = ExprEvaluator()
+        self.assertEqual(e.parse('!T'), False)
+        self.assertEqual(e.parse('!F'), True)
+        self.assertEqual(e.parse('!(!T)'), True)
+        self.assertEqual(e.parse('!(!F)'), False)
+        self.assertEqual(e.parse('!!T'), True)
+        self.assertEqual(e.parse('!!F'), False)
+
+    def test_and(self):
+        e = ExprEvaluator()
+        self.assertEqual(e.parse('T + T'), True)
+        self.assertEqual(e.parse('!T + T'), False)
+        self.assertEqual(e.parse('T + !T'), False)
+        self.assertEqual(e.parse('!T + !T'), False)
+        self.assertEqual(e.parse('(T + T)'), True)
+        self.assertEqual(e.parse('(!T + T)'), False)
+        self.assertEqual(e.parse('(T + !T)'), False)
+        self.assertEqual(e.parse('(!T + !T)'), False)
+
+    def test_or(self):
+        e = ExprEvaluator()
+        self.assertEqual(e.parse('T | T'), True)
+        self.assertEqual(e.parse('!T | T'), True)
+        self.assertEqual(e.parse('T | !T'), True)
+        self.assertEqual(e.parse('!T | !T'), False)
+        self.assertEqual(e.parse('(T | T)'), True)
+        self.assertEqual(e.parse('(!T | T)'), True)
+        self.assertEqual(e.parse('(T | !T)'), True)
+        self.assertEqual(e.parse('(!T | !T)'), False)
+
+    def test_xor(self):
+        e = ExprEvaluator()
+        self.assertEqual(e.parse('T ^ T'), False)
+        self.assertEqual(e.parse('!T ^ T'), True)
+        self.assertEqual(e.parse('T ^ !T'), True)
+        self.assertEqual(e.parse('!T ^ !T'), False)
+        self.assertEqual(e.parse('(T ^ T)'), False)
+        self.assertEqual(e.parse('(!T ^ T)'), True)
+        self.assertEqual(e.parse('(T ^ !T)'), True)
+        self.assertEqual(e.parse('(!T ^ !T)'), False)
+
+    def test_complex(self):
+        e = ExprEvaluator()
+        self.assertEqual(e.parse('(T | (F | T))'), True)
+        self.assertEqual(e.parse('!(T | (F | T))'), False)
+        self.assertEqual(e.parse('(F | F | T)'), True)
+        self.assertEqual(e.parse('( T + F ^ T)'), True)
+        self.assertEqual(e.parse('(F | F | T) ^ ( T + F ^ T)'), False)
+        self.assertEqual(e.parse('(F | F | T) ^ ( T + F ^ T) + (T | (F | T))'), False)
+        self.assertEqual(e.parse('!((F | F | T) ^ ( T + F ^ T) + (T | (F | T)))'), True)
 
 def main(argv):
     if len(argv) != 2:
@@ -107,6 +184,7 @@ def main(argv):
 
 if __name__ == "__main__":
     try:
-	    main(sys.argv)
+        unittest.main()
+	    #main(sys.argv)
     except Exception as e:
         print('Error : ' + str(e))
