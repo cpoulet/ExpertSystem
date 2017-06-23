@@ -11,72 +11,8 @@ verbose     = 0
 
 class Fact:
     def __init__(self, name, state = False):
-        if (len(name) != 1 or not name in string.ascii_uppercase):
-            print ("Wrong Fact name.")
-            exit()
         self.name = name
         self.state = False
-
-def rule_error():
-    print ("Wrong rules")
-
-def remove_comment(string):
-    rules = []
-    for line in string.split('\n'):
-        rule, sep, comment = line.partition('#')
-        if rule.strip():
-            rules.append(rule)
-    return rules
-
-def get_leafs(rule):
-    global leafs    #ugly
-    global verbose
-    for c in rule:
-        if c in string.ascii_uppercase:
-            leafs.append(c)
-        else:
-            print('Wrong initial facts')
-    if verbose:
-        print('Leafs = ', leafs, sep=' ')
-    return
-
-def get_queries(rule):
-    global queries  #ugly
-    global verbose
-    for c in rule:
-        if c in string.ascii_uppercase:
-            queries.append(c)
-        else:
-            print('Wrong queries')
-    if verbose:
-        print('Queries = ', queries, sep=' ')
-    return
-
-def check_rule(rule):
-    if rule.count('=>') >= 2 or bool(re.search(r'[^A-Z\s+|()!^=><]', rule)):
-        rule_error()
-        return [0, 0]   #moche
-    else:
-        return rule.partition('<=>' if rule.count('<=>') else '=>')
-
-def knowledge_base(rules):
-    global knowledges
-    global verbose
-    for rule in rules:
-        if rule[0] == '=':
-            get_leafs(rule[1:].strip())
-        elif rule[0] == '?':
-            get_queries(rule[1:].strip())
-        else:
-            rule = check_rule(rule)
-            if rule[1] == '=>':
-                knowledges.append([rule[0].strip(), rule[2].strip(), 1])
-            elif rule[1] == '<=>':
-                knowledges.append([rule[0].strip(), rule[2].strip(), 1])
-                knowledges.append([rule[2].strip(), rule[0].strip(), 1])
-    if verbose:
-        print(*knowledges, sep='\n')
-    return
 
 class Nodes:
 
