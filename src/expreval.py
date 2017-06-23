@@ -39,7 +39,7 @@ class ExprEvaluator:
         ('LB' , r'\('),
         ('RB' , r'\)'),
         ('FACT' , r'[A-Z]'),
-        ('WS' , r'\s')]
+        ('WS' , r'\s'),
         ('ERROR' , r'[^A-Z\s()!^+|]')]
 
     def parse(self, expr):
