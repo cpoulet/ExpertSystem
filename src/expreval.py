@@ -102,13 +102,13 @@ class ExprEvaluator:
         else:
             raise SequenceError('Expected a FACT or a Left Brace')
 
-class SequenceError(ValueError):
+class SequenceError(Exception):
     pass
 
-class TokenError(ValueError):
+class TokenError(Exception):
     pass
 
-class ArgumentError(ValueError):
+class ArgumentError(Exception):
     pass
 
 def main(argv):
