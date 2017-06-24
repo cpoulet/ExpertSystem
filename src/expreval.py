@@ -5,7 +5,7 @@ import re
 import collections
 from tokenizer import tokengenerator
 
-Token = collections.namedtuple('Token', ['type_', 'value'])
+Token = collections.namedtuple('Token', ['type_', 'value']) #Where should I put this ?
 
 class ExprEvaluator:
     '''
