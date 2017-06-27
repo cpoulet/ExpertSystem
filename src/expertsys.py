@@ -9,10 +9,36 @@ from tokenizer import tokengenerator
 
 Token = collections.namedtuple('Token', ['type_', 'value'])
 
+class Answer:
+
+    def __init__(self):
+        self.facts = [False] * 26
+        self.modified = [False] * 26
+
+    def show(self):
+        print(*[chr(c + 65) for c in range(26)])
+        print(*['T' if x == True else 'F' if x == False else 'U' for x in self.facts])
+
+class RuleError(Exception):
+    pass
+
+class ChildError(Exception):
+    pass
+
+class ThenError(Exception):
+    pass
+
+class ParsingError(Exception):
+    pass
+
+class InputError(Exception):
+    pass
+
 class Node:
 
-    def __init__(self, name, children = []):
+    def __init__(self, name, root = False, children = []):
         self.name = name
+        self.root = root
         self.children = []
         for child in children:
             self.add_child(Node(child))
@@ -32,7 +58,7 @@ class Node:
                 queue.append(child)
             ret.append(queue[0].name)
             del queue[0]
-        return ret
+        print(*ret)
 
     def p_prefix(self):
         print (self.name)
@@ -44,6 +70,52 @@ class Node:
             child.p_suffix()
         print (self.name)
 
+    def e_suffix(self, answer = False):
+        for child in self.children:
+            child.e_suffix(answer)
+        self._evaluate(answer)
+
+    def _evaluate(self, answer):
+        if not self.root:
+            e = ExprEvaluator(answer)
+            rslt = e.parse(self.name['if'])
+            self._involve(rslt, self.name['then'], answer)
+        else:
+            print(self.name + ' is ' + str(answer.facts[ord(self.name) - 65]))
+
+    def _involve(self, rslt, rule, answer):
+        regex = re.compile('(?P<FACT>^[A-Z]$)|(?P<NOT>^\![A-Z]$)|(?P<AND>^[A-Z]\+[A-Z]$)|(?P<OR>^[A-Z]\|[A-Z]$)')
+        match = re.match(regex, rule)
+        if match.lastgroup == 'FACT':
+            self._modify(match.group()[0], answer, rslt)
+        elif match.lastgroup == 'NOT':
+            self._modify(match.group()[1], answer, not rslt)
+        elif match.lastgroup == 'AND':
+            if rslt: 
+                self._modify(match.group()[0], answer, rslt)
+                self._modify(match.group()[2], answer, rslt)
+            else: 
+                self._modify(match.group()[0], answer, 'undefined')
+                self._modify(match.group()[2], answer, 'undefined')
+        elif match.lastgroup == 'OR':
+            if not rslt: 
+                self._modify(match.group()[0], answer, rslt)
+                self._modify(match.group()[2], answer, rslt)
+            else: 
+                self._modify(match.group()[0], answer, 'undefined')
+                self._modify(match.group()[2], answer, 'undefined')
+        else:
+            raise ThenError('The "Then" part is a bit too complex')
+
+    def _modify(self, fact, answer, value):
+        k = ord(fact) - 65
+        if answer.facts[k] != value:
+            if answer.modified[k] and answer.facts[k] != 'undefined' and value != 'undefined':
+                raise RuleError('There is an insolving incoherance between rules')
+            elif value != 'undefined' or not answer.modified[k]:
+                answer.facts[k] = value
+        answer.modified[k] = True
+
 class Expertsystem:
 
     def __init__(self, verbose):
@@ -51,6 +123,7 @@ class Expertsystem:
         self._leafs         = []
         self._queries       = []
         self._knowledges    = []
+        self.a              = Answer()
 
     def parse_file(self, input_):
         with open(input_, 'r') as f:
@@ -78,9 +151,14 @@ class Expertsystem:
                     if s.group(2):
                         self._knowledges.append({'if':s.group(3), 'then':s.group(1), 'used':False })
 
+        for l in self._leafs:
+            self.a.facts[ord(l) - 65] = True
+            self.a.modified[ord(l) - 65] = True
+
         if self._verbose:
             print('Leafs = ' + str(self._leafs))
             print('Queries = ' + str(self._queries))
+            print(*self.a.facts)
             print(*self._knowledges, sep='\n')
 
     def answer_queries(self):
@@ -91,12 +169,12 @@ class Expertsystem:
         if fact in self._leafs:
             print(fact + ' is True.')
             return
-        root = Node(fact)
+        root = Node(fact, True)
         for rule in self._knowledges:
             if fact in rule['then'] and not rule['used']:
                 child = root.add_child(Node(rule))
                 self._firing_rule(child, rule)
-        print(*root.p_breadth(), sep='\n')
+        root.e_suffix(self.a)
         self._reinit()
 
     def _firing_rule(self, node, rule):
@@ -124,8 +202,7 @@ def main():
     e.answer_queries()
 
 if __name__ == "__main__":
-    main()
-#    try:
-#        main()
-#    except Exception as e:
-#        print('Error : ' + str(e))
+    try:
+        main()
+    except Exception as e:
+        print('Error : ' + str(e))

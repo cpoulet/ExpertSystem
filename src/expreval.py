@@ -6,7 +6,6 @@ import collections
 from tokenizer import tokengenerator
 
 Token = collections.namedtuple('Token', ['type_', 'value']) #Where should I put this ?
-
 class ExprEvaluator:
     '''
     Implementation of a simple recursive descent parser in the frame
@@ -21,7 +20,7 @@ class ExprEvaluator:
     <factor>    ::= '('<expr>')' | FACT
     '''
 
-    def __init__(self):
+    def __init__(self, facts = False):
         self.TOKENS_SPEC = [
         ('OR' , r'\|'),
         ('AND' , r'\+'),
@@ -32,6 +31,10 @@ class ExprEvaluator:
         ('FACT' , r'[A-Z]'),
         ('WS' , r'\s'),
         ('ERROR' , r'[^A-Z\s()!^+|]')]
+        if facts:
+            if not type(facts.facts) is list or len(facts.facts) != 26:
+                raise ArgumentError('ExprEvaluator need a list of 26 elem')
+        self._facts = facts.facts
 
     def parse(self, expr):
         self.token_generator = tokengenerator(expr, self.TOKENS_SPEC)
@@ -60,7 +63,7 @@ class ExprEvaluator:
         '''
         expr_value = self._or()
         while self._accept('XOR'):
-            return expr_value ^ self._expr()
+            return self._f_xor(expr_value, self._expr())
         return expr_value
             
     def _or(self):
@@ -69,7 +72,7 @@ class ExprEvaluator:
         '''
         or_value = self._and()
         while self._accept('OR'):
-            return or_value | self._or()
+            return self._f_or(or_value, self._or())
         return or_value
         
     def _and(self):
@@ -78,7 +81,7 @@ class ExprEvaluator:
         '''
         and_value = self._not()
         while self._accept('AND'):
-            return and_value & self._and()
+            return self._f_and(and_value, self._and())
         return and_value
 
     def _not(self):
@@ -86,7 +89,7 @@ class ExprEvaluator:
         <not> ::= '!'<not> | <factor>
         '''
         if self._accept('NOT'):
-            return not self._not()
+            return self._f_not(self._not())
         return self._factor()
 
     def _factor(self):
@@ -94,13 +97,37 @@ class ExprEvaluator:
         <factor> ::= '('<expr>')' | <fact>
         '''
         if self._accept('FACT'):
-            return True if self.current_token.value == 'T' else False
+            if self._facts:
+                return self._facts[ord(self.current_token.value) - 65]
+            else:
+                return True if self.current_token.value == 'T' else False
         elif self._accept('LB'):
             expr_value = self._expr()
             self._expect('RB')
             return expr_value
         else:
             raise SequenceError('Expected a FACT or a Left Brace')
+
+    def _f_and(self, x, y):
+        if not 'undefined' in [x, y]:
+            return x & y
+        else:
+            return False if False in [x,y] else 'undefined'
+
+    def _f_or(self, x, y):
+        if not 'undefined' in [x, y]:
+            return x | y
+        else:
+            return True if True in [x,y] else 'undefined'
+
+    def _f_xor(self, x, y):
+        if not 'undefined' in [x, y]:
+            return x ^ y
+        else:
+            return 'undefined'
+
+    def _f_not(self, x):
+        return x if x == 'undefined' else not x
 
 class SequenceError(Exception):
     pass
