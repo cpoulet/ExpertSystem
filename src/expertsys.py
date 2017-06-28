@@ -81,7 +81,7 @@ class Node:
             rslt = e.parse(self.name['if'])
             self._involve(rslt, self.name['then'], answer)
         else:
-            print(self.name + ' is ' + str(answer.facts[ord(self.name) - 65]))
+            print(self.name + ' is ' + str(answer.facts[ord(self.name) - 65]) + '.')
 
     def _involve(self, rslt, rule, answer):
         regex = re.compile('(?P<FACT>^[A-Z]$)|(?P<NOT>^\![A-Z]$)|(?P<AND>^[A-Z]\+[A-Z]$)|(?P<OR>^[A-Z]\|[A-Z]$)')
@@ -118,7 +118,7 @@ class Node:
 
 class Expertsystem:
 
-    def __init__(self, verbose):
+    def __init__(self, verbose = False):
         self._verbose       = verbose
         self._leafs         = []
         self._queries       = []

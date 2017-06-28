@@ -34,7 +34,9 @@ class ExprEvaluator:
         if facts:
             if not type(facts.facts) is list or len(facts.facts) != 26:
                 raise ArgumentError('ExprEvaluator need a list of 26 elem')
-        self._facts = facts.facts
+            self._facts = facts.facts
+        else:
+            self._facts = facts
 
     def parse(self, expr):
         self.token_generator = tokengenerator(expr, self.TOKENS_SPEC)
@@ -56,6 +58,10 @@ class ExprEvaluator:
     def _expect(self, token_type):
         if not self._accept(token_type):
             raise SequenceError('Wrong token sequence busted. Expected : ' + token_type)
+
+    def _refuse(self, token_type):
+        if self._accept(token_type):
+            raise SequenceError('Wrong token sequence busted. Refused : ' + token_type)
 
     def _expr(self):
         '''
@@ -97,6 +103,7 @@ class ExprEvaluator:
         <factor> ::= '('<expr>')' | <fact>
         '''
         if self._accept('FACT'):
+            self._refuse('FACT')
             if self._facts:
                 return self._facts[ord(self.current_token.value) - 65]
             else:
@@ -145,7 +152,8 @@ def main(argv):
     print(e.parse(argv[1]))
 
 if __name__ == "__main__":
-    try:
-	    main(sys.argv)
-    except Exception as e:
-        print('Error : ' + str(e))
+    main(sys.argv)
+#    try:
+#	    main(sys.argv)
+#    except Exception as e:
+#        print('Error : ' + str(e))
