@@ -70,6 +70,8 @@ class ExprEvaluator:
         expr_value = self._or()
         while self._accept('XOR'):
             return self._f_xor(expr_value, self._expr())
+        if self.next_token:
+            raise SequenceError('Wrong token sequence busted. Processing stopped at ' + self.next_token.value)
         return expr_value
             
     def _or(self):
@@ -103,7 +105,6 @@ class ExprEvaluator:
         <factor> ::= '('<expr>')' | <fact>
         '''
         if self._accept('FACT'):
-            self._refuse('FACT')
             if self._facts:
                 return self._facts[ord(self.current_token.value) - 65]
             else:
