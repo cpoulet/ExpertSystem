@@ -168,7 +168,7 @@ class Expertsystem:
     def ask(self, fact):
         if fact in self._leafs:
             print(fact + ' is True.')
-            return
+            return 
         root = Node(fact, True)
         for rule in self._knowledges:
             if fact in rule['then'] and not rule['used']:

@@ -43,7 +43,10 @@ class ExprEvaluator:
         self.current_token = None
         self.next_token = None
         self._next()
-        return self._expr()
+        rslt = self._expr()
+        if self.next_token:
+            raise SequenceError('Wrong token sequence busted. Processing stopped at ' + self.next_token.value)
+        return rslt
 
     def _next(self):
         self.current_token, self.next_token = self.next_token, next(self.token_generator, None)
@@ -70,8 +73,6 @@ class ExprEvaluator:
         expr_value = self._or()
         while self._accept('XOR'):
             return self._f_xor(expr_value, self._expr())
-        if self.next_token:
-            raise SequenceError('Wrong token sequence busted. Processing stopped at ' + self.next_token.value)
         return expr_value
             
     def _or(self):
