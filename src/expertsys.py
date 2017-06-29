@@ -80,8 +80,6 @@ class Node:
             e = ExprEvaluator(answer)
             rslt = e.parse(self.name['if'])
             self._involve(rslt, self.name['then'], answer)
-        else:
-            print(self.name + ' is ' + str(answer.facts[ord(self.name) - 65]) + '.')
 
     def _involve(self, rslt, rule, answer):
         regex = re.compile('(?P<FACT>^[A-Z]$)|(?P<NOT>^\![A-Z]$)|(?P<AND>^[A-Z]\+[A-Z]$)|(?P<OR>^[A-Z]\|[A-Z]$)')
@@ -123,6 +121,7 @@ class Expertsystem:
         self._leafs         = []
         self._queries       = []
         self._knowledges    = []
+        self.d              = {}
         self.a              = Answer()
 
     def parse_file(self, input_):
@@ -163,12 +162,12 @@ class Expertsystem:
 
     def answer_queries(self):
         for q in self._queries:
-            self.ask(q)
+            self.d[q] = self.ask(q)
+        return self.d
 
     def ask(self, fact):
         if fact in self._leafs:
-            print(fact + ' is True.')
-            return 
+            return True
         root = Node(fact, True)
         for rule in self._knowledges:
             if fact in rule['then'] and not rule['used']:
@@ -176,6 +175,7 @@ class Expertsystem:
                 self._firing_rule(child, rule)
         root.e_suffix(self.a)
         self._reinit()
+        return self.a.facts[ord(root.name) - 65]
 
     def _firing_rule(self, node, rule):
         rule['used'] = True
@@ -185,7 +185,7 @@ class Expertsystem:
                     if fact.group() in r['then'] and not r['used']:
                         child = node.add_child(Node(r))
                         self._firing_rule(child, r)
-    
+ 
     def _reinit(self):
         for rule in self._knowledges:
             rule['used'] = False
@@ -199,7 +199,8 @@ def main():
         raise InputError('File not found: "' + args.input_ + '".')
     e = Expertsystem(args.verbose)
     e.parse_file(args.input_)
-    e.answer_queries()
+    d = e.answer_queries()
+    print('\n'.join('{} : {}'.format(k, v) for k, v in d.items()))
 
 if __name__ == "__main__":
     try:
