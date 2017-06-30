@@ -34,6 +34,18 @@ class ParsingError(Exception):
 class InputError(Exception):
     pass
 
+class Color:
+    def color(self, string):
+        return self.red(string) if string == 'False' else self.green(string) if  string == 'True' else self.yellow(string)
+    def red(self, string):
+        return '\033[1;31m' + string + '\033[1;0m'
+    def green(self, string):
+        return '\033[1;32m' + string + '\033[1;0m'
+    def yellow(self, string):
+        return '\033[1;33m' + string + '\033[1;0m'
+    def white(self, string):
+        return '\033[1;37m' + string + '\033[1;0m'
+
 class Node:
 
     def __init__(self, name, root = False, children = []):
@@ -80,8 +92,8 @@ class Node:
             e = ExprEvaluator(answer)
             rslt = e.parse(self.name['if'])
             if verbose:
-                print('\t' + self.name['if'] + ' is ' + str(rslt) + ' implies ', end = '')
-                print(self.name['then'] + ' is ' + str(rslt))
+                print('\t' + self.name['if'] + ' is ' + Color().color(str(rslt)) + ' implies ', end = '')
+                print(self.name['then'] + ' is ' + Color().color(str(rslt)))
             self._involve(rslt, self.name['then'], answer, verbose)
 
     def _involve(self, rslt, rule, answer, verbose):
@@ -164,10 +176,10 @@ class Expertsystem:
 
     def ask(self, fact):
         if self._verbose:
-            print('\nAsking value of ' + fact + ':\n')
+            print(Color().white('\nAsking value of ' + fact + ':\n'))
         if fact in self._leafs:
             if self._verbose:
-                print('\t' + fact + ' is a True initial fact')
+                print('\t' + fact + ' is a ' + Color().color('True') + ' initial fact')
             return True
         root = Node(fact, True)
         for rule in self._knowledges:
@@ -177,10 +189,10 @@ class Expertsystem:
         if self._verbose and len(self._leafs):
             print('\t', end ='')
             print(*self._leafs, sep=',', end='')
-            print(' is True' if len(self._leafs) == 1 else ' are True')
+            print(' is ' if len(self._leafs) == 1 else ' are ' + Color().color('True'))
         root.e_suffix(self.a, self._verbose)
         if self._verbose:
-            print('\t' + root.name + ' is ' + str(self.a.facts[ord(root.name) - 65]))
+            print('\t' + root.name + ' is ' + Color().color(str(self.a.facts[ord(root.name) - 65])))
         self._reinit()
         return self.a.facts[ord(root.name) - 65]
 
