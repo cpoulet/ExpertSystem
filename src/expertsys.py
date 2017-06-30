@@ -70,18 +70,21 @@ class Node:
             child.p_suffix()
         print (self.name)
 
-    def e_suffix(self, answer = False):
+    def e_suffix(self, answer = False, verbose = False):
         for child in self.children:
-            child.e_suffix(answer)
-        self._evaluate(answer)
+            child.e_suffix(answer, verbose)
+        self._evaluate(answer, verbose)
 
-    def _evaluate(self, answer):
+    def _evaluate(self, answer, verbose):
         if not self.root:
             e = ExprEvaluator(answer)
             rslt = e.parse(self.name['if'])
-            self._involve(rslt, self.name['then'], answer)
+            if verbose:
+                print('\t' + self.name['if'] + ' is ' + str(rslt) + ' implies ', end = '')
+                print(self.name['then'] + ' is ' + str(rslt))
+            self._involve(rslt, self.name['then'], answer, verbose)
 
-    def _involve(self, rslt, rule, answer):
+    def _involve(self, rslt, rule, answer, verbose):
         regex = re.compile('(?P<FACT>^[A-Z]$)|(?P<NOT>^\![A-Z]$)|(?P<AND>^[A-Z]\+[A-Z]$)|(?P<OR>^[A-Z]\|[A-Z]$)')
         match = re.match(regex, rule)
         if not match:
@@ -154,26 +157,30 @@ class Expertsystem:
             self.a.facts[ord(l) - 65] = True
             self.a.modified[ord(l) - 65] = True
 
-        if self._verbose:
-            print('Leafs = ' + str(self._leafs))
-            print('Queries = ' + str(self._queries))
-            print(*self.a.facts)
-            print(*self._knowledges, sep='\n')
-
     def answer_queries(self):
         for q in self._queries:
             self.d[q] = self.ask(q)
         return self.d
 
     def ask(self, fact):
+        if self._verbose:
+            print('\nAsking value of ' + fact + ':\n')
         if fact in self._leafs:
+            if self._verbose:
+                print('\t' + fact + ' is a True initial fact')
             return True
         root = Node(fact, True)
         for rule in self._knowledges:
             if fact in rule['then'] and not rule['used']:
                 child = root.add_child(Node(rule))
                 self._firing_rule(child, rule)
-        root.e_suffix(self.a)
+        if self._verbose and len(self._leafs):
+            print('\t', end ='')
+            print(*self._leafs, sep=',', end='')
+            print(' is True' if len(self._leafs) == 1 else ' are True')
+        root.e_suffix(self.a, self._verbose)
+        if self._verbose:
+            print('\t' + root.name + ' is ' + str(self.a.facts[ord(root.name) - 65]))
         self._reinit()
         return self.a.facts[ord(root.name) - 65]
 
@@ -200,8 +207,10 @@ def main():
     e = Expertsystem(args.verbose)
     e.parse_file(args.input_)
     d = e.answer_queries()
-    if d:
+    if d and not args.verbose:
         print('\n'.join('{} : {}'.format(k, v) for k, v in d.items()))
+    if args.verbose:
+        print()
 
 if __name__ == "__main__":
     try:
