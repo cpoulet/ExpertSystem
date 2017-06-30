@@ -1,5 +1,3 @@
 B + A => E | F
-B ^ !C => A
-A  => !F
-=BC
-?ABCEFK
+=BCA
+?E

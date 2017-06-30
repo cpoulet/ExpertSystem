@@ -84,6 +84,8 @@ class Node:
     def _involve(self, rslt, rule, answer):
         regex = re.compile('(?P<FACT>^[A-Z]$)|(?P<NOT>^\![A-Z]$)|(?P<AND>^[A-Z]\+[A-Z]$)|(?P<OR>^[A-Z]\|[A-Z]$)')
         match = re.match(regex, rule)
+        if not match:
+            raise ThenError('The "Then" part is a bit too complex')
         if match.lastgroup == 'FACT':
             self._modify(match.group()[0], answer, rslt)
         elif match.lastgroup == 'NOT':
@@ -102,8 +104,6 @@ class Node:
             else: 
                 self._modify(match.group()[0], answer, 'undefined')
                 self._modify(match.group()[2], answer, 'undefined')
-        else:
-            raise ThenError('The "Then" part is a bit too complex')
 
     def _modify(self, fact, answer, value):
         k = ord(fact) - 65
@@ -200,7 +200,8 @@ def main():
     e = Expertsystem(args.verbose)
     e.parse_file(args.input_)
     d = e.answer_queries()
-    print('\n'.join('{} : {}'.format(k, v) for k, v in d.items()))
+    if d:
+        print('\n'.join('{} : {}'.format(k, v) for k, v in d.items()))
 
 if __name__ == "__main__":
     try:

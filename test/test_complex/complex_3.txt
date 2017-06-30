@@ -1,0 +1,19 @@
+# this is a comment$
+# all the required rules and symbols, along with the bonus ones, will be
+# shown here. spacing is not important
+
+C           => E        #1  C implies E
+A + B + C   => D        #2  A and B and C implies D
+A + !B      => F        #4  A and not B implies F
+C | !G      => H        #5  C or not G implies H
+V ^ W       => X        #6  V xor W implies X
+A + B       => Y + Z    #7  A and B implies Y and Z
+C | D       => X + V    #8  C or D implies X or V
+E + F       => !V       #9  E and F implies not V
+A + B       <=>!C       #10 A and B if and only if C
+
+=ABG                    # Initial facts : A, B and G are true. All others are false.
+			# If no facts are initially true, then a simple "=" followed
+			# by a newline is used
+
+?GVXH                    # Queries : What are G, V and X ?
