@@ -54,8 +54,8 @@ class Fact(Node):
     label   : A, B, ... ,Z
     '''
 
-    def __init__(self, label):
-        super().__init__(label)
+    def __init__(self, label, *args):
+        super().__init__(label, *args)
 
 class Operator(Node):
     '''
@@ -67,16 +67,11 @@ class Operator(Node):
     value   = 'F'
     '''
 
-    def __init__(self, label):
-        super().__init__(label)
+    def __init__(self, label, *args):
+        super().__init__(label, *args)
 
 class GraphCreator:
     '''
-    Implementation of a simple recursive descent parser in the frame
-    of my project EvalExpr for "l'Ecole 42".
-
-    Here is the BNF grammar I used :
-
     <rule>      ::= <expr> ('=>' | '<=>') <expr>
     <expr>      ::= <or> {'^' <expr>}
     <or>        ::= <and> {'|' <or>}
@@ -240,8 +235,8 @@ def main(argv):
     if len(argv) != 2:
         raise ArgumentError('Only one argument is needed.')
     e = GraphCreator()
-    graph = e.parse(argv[1])
-    graph = e.parse(argv[1], graph)
+    graph = e.parse('A + B => C')
+    graph = e.parse('C | D => E', graph)
 
 if __name__ == "__main__":
     try:
