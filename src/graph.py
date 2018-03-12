@@ -53,7 +53,6 @@ class Fact(Node):
     '''
     label   : A, B, ... ,Z
     '''
-
     def __init__(self, label):
         super().__init__(label)
 
@@ -66,7 +65,6 @@ class Operator(Node):
     parents = ['FACT', 'OPERATOR']
     value   = 'F'
     '''
-
     def __init__(self, label):
         super().__init__(label)
 
@@ -84,7 +82,6 @@ class GraphCreator:
     <not>       ::= '!'<not> | <factor>
     <factor>    ::= '('<expr>')' | FACT
     '''
-
     def __init__(self):
         self.graph = Graph()
         self.TOKENS_SPEC = [
@@ -197,27 +194,15 @@ class GraphCreator:
 
     def addOperator(self, left_n, right_n, label):
         if left_n.label != label and right_n.label != label:
-            if self.side == 'LEFT':
-                return Operator(label, left_n, right_n)
-            else:
-                o = Operator(label)
-                left_n.addParents(o)
-                right_n.addParents(o)
-                return o
+            o = Operator(label)
+            o.addParents(left_n, right_n)
+            return o
         elif left_n.label == label:
-            if self.side == 'LEFT':
-                left_n.addParents(right_n)
-                return left_n
-            else:
-                right_n.addParents(left_n)
-                return left_n
+            left_n.addParents(right_n)
+            return left_n
         else:
-            if self.side == 'LEFT':
-                right_n.addParents(left_n)
-                return right_n
-            else:
-                left_n.addParents(right_n)
-                return right_n
+            right_n.addParents(left_n)
+            return right_n
 
     def addNot(self, node):
         if self.side == 'LEFT':

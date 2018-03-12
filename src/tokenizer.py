@@ -45,15 +45,16 @@ def main(argv):
         token_spec = argv[2]
     else:
         token_spec = [
-        ('OR' , r'\|'),
-        ('AND' , r'\+'),
-        ('XOR' , r'\^'),
-        ('NOT' , r'\!'),
-        ('LB' , r'\('),
-        ('RB' , r'\)'),
-        ('FACT' , r'[A-Z]'),
-        ('WS' , r'\s'),
-        ('ERROR' , r'[^A-Z\s()!^+|]')]
+            ('OR' , r'\|'),
+            ('AND' , r'\+'),
+            ('XOR' , r'\^'),
+            ('NOT' , r'\!'),
+            ('LB' , r'\('),
+            ('RB' , r'\)'),
+            ('FACT' , r'[A-Z]'),
+            ('WS' , r'\s'),
+            ('ERROR' , r'[^A-Z\s()!^+|]'),
+        ]
     tg = tokengenerator(expr, token_spec)
     for token in tg:
         print(token)
