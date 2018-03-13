@@ -56,9 +56,8 @@ class Fact(Node):
     def __init__(self, label):
         super().__init__(label)
 
-'''    def __init__(self, label, *args):
-        super().__init__(label, *args)
-'''
+#    def __init__(self, label, *args):
+#        super().__init__(label, *args)
 
 class Operator(Node):
     '''
@@ -72,9 +71,8 @@ class Operator(Node):
     def __init__(self, label):
         super().__init__(label)
 
-'''    def __init__(self, label, *args):
-        super().__init__(label, *args)
-'''
+#    def __init__(self, label, *args):
+#        super().__init__(label, *args)
 
 class GraphCreator:
     '''
@@ -196,16 +194,16 @@ class GraphCreator:
             raise SequenceError('Expected a FACT or a Left Brace')
 
     def addOperator(self, left_n, right_n, label):
-        if left_n.label != label and right_n.label != label:
+#        if left_n.label != label and right_n.label != label:
             o = Operator(label)
             o.addParents(left_n, right_n)
             return o
-        elif left_n.label == label:
-            left_n.addParents(right_n)
-            return left_n
-        else:
-            right_n.addParents(left_n)
-            return right_n
+#        elif left_n.label == label:
+#            left_n.addParents(right_n)
+#            return left_n
+#        else:
+#            right_n.addParents(left_n)
+#            return right_n
 
     def addNot(self, node):
         if self.side == 'LEFT':
