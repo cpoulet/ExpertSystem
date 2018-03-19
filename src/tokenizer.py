@@ -4,15 +4,19 @@ import sys
 import re
 import collections
 
+from exceptions import TokenError
+
 Token = collections.namedtuple('Token', ['type_', 'value'])
 
 def tokengenerator(expr, tokens_spec):
-    '''
+    r'''
     Token Generator
 
     Example of a token specification list:
 
         tokens_spec = [
+        ('IFF' , r'\<\=\>'),
+        ('IMP' , r'\=\>'),
         ('OR' , r'\|'),
         ('AND' , r'\+'),
         ('XOR' , r'\^'),
