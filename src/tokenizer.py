@@ -6,6 +6,9 @@ import collections
 
 Token = collections.namedtuple('Token', ['type_', 'value'])
 
+class TokenError(Exception):
+    pass
+
 def tokengenerator(expr, tokens_spec):
     '''
     Token Generator
@@ -13,6 +16,8 @@ def tokengenerator(expr, tokens_spec):
     Example of a token specification list:
 
         tokens_spec = [
+        ('IFF' , r'\<\=\>'),
+        ('IMP' , r'\=\>'),
         ('OR' , r'\|'),
         ('AND' , r'\+'),
         ('XOR' , r'\^'),

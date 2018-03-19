@@ -25,54 +25,78 @@ class Graph:
     def checkNode(self, label):
         return label in self.nodes
 
-    def addNode(self, label):
+    def addFact(self, label):
         if not self.checkNode(label):
-            self.nodes[label] = Node(label)
+            self.nodes[label] = Fact(label)
         return self.nodes[label]
 
+    def addOperator(self, label, leftNode=None, rightNode=None, side=True):
+        if side:
+            o = Operator(label)
+            o.setParents(leftNode, rightNode)
+        else:
+            o = Operator(label)
+            o.addChildren([leftNode, rightNode])
+        return o
+
     def updateNode(self, node):
+        # Do stuff here ?
         print("Node '" + node.label + "' updated")
 
 class Node:
     '''
-    value   : 'U' or 'T' or 'F'
-    parents : [ OPERATOR or FACT, ... ]
+    Attributes:
+    children    : [ Node, ... ]
+    label       : 'A', 'B', ... , 'Z'
+    parents     : (Node, Node) || (Node, None) || (None, None)
+    value       : 'U' or 'T' or 'F' (default: 'U')
+
+    Methods:
+    addChildren : (children=[ Node, ... ]) => Node
+    setParents  : (parent1=Node, parent2=Node) => Node
     '''
-    def __init__(self, label, *args):
+    def __init__(self, label):
+        self.children = []
         self.label = label
+        self.parents = (None, None)
         self.value = 'U'
-        self.parents = []
-        self.parents += args
         print("Node '" + label + "' created")
 
-    def addParents(self, *args):
-        self.parents += args
+    def addChildren(self, children=[]):
+        self.children += children
         return self
+
+    def setParents(self, parent1=None, parent2=None):
+        self.parents = (parent1, parent2)
+        return self
+
 
 class Fact(Node):
     '''
-    label   : A, B, ... ,Z
+    label   : 'A', 'B', ... , 'Z'
+
+    example:
+    children = [ Operator('AND') ]
+    label   = 'A'
+    parents = ( Operator('NOT'), None )
+    value   = 'T'
     '''
     def __init__(self, label):
         super().__init__(label)
 
-#    def __init__(self, label, *args):
-#        super().__init__(label, *args)
 
 class Operator(Node):
     '''
-    label   : AND or OR or XOR or NOT
+    label   : 'NOT' || 'AND' || 'OR' || 'XOR' || 'IMP' || 'IFF'
 
     example:
+    children = [ Operator('IMP') ]
     label   = 'AND'
-    parents = ['FACT', 'OPERATOR']
+    parents = ( Fact('A'), Fact('B') )
     value   = 'F'
     '''
     def __init__(self, label):
         super().__init__(label)
-
-#    def __init__(self, label, *args):
-#        super().__init__(label, *args)
 
 class GraphCreator:
     '''
@@ -86,7 +110,7 @@ class GraphCreator:
     def __init__(self):
         self.graph = Graph()
         self.TOKENS_SPEC = [
-        ('EQ' , r'\<\=\>'),
+        ('IFF' , r'\<\=\>'),
         ('IMP' , r'\=\>'),
         ('OR' , r'\|'),
         ('AND' , r'\+'),
@@ -98,8 +122,8 @@ class GraphCreator:
         ('WS' , r'\s'),
         ('ERROR' , r'[^A-Z\s()!^+|]')]
 
-    def parse(self, expr, graph = False):
-        if type(graph) == Graph:
+    def parse(self, expr, graph=False):
+        if type(graph) is Graph: 
             self.graph = graph
         self.token_generator = tokengenerator(expr, self.TOKENS_SPEC)
         self.current_token = None
@@ -151,7 +175,7 @@ class GraphCreator:
         '''
         expr_value = self._or()
         while self._accept('XOR'):
-            return self.addOperator(expr_value, self._expr(), 'XOR')
+            return self.graph.addOperator('XOR', leftNode=expr_value, rightNode=self._expr())
         return expr_value
             
     def _or(self):
@@ -160,7 +184,7 @@ class GraphCreator:
         '''
         or_value = self._and()
         while self._accept('OR'):
-            return self.addOperator(or_value, self._or(), 'OR')
+            return self.graph.addOperator('OR', leftNode=or_value, rightNode=self._or())
         return or_value
         
     def _and(self):
@@ -169,7 +193,7 @@ class GraphCreator:
         '''
         and_value = self._not()
         while self._accept('AND'):
-            return self.addOperator(and_value, self._and(), 'AND')
+            return self.graph.addOperator('AND', leftNode=and_value, rightNode=self._and())
         return and_value
 
     def _not(self):
@@ -177,7 +201,7 @@ class GraphCreator:
         <not> ::= '!'<not> | <factor>
         '''
         if self._accept('NOT'):
-            return self.addNot(self._not())
+            return self.graph.addOperator('NOT', leftNode=self._not())
         return self._factor()
 
     def _factor(self):
@@ -185,7 +209,7 @@ class GraphCreator:
         <factor> ::= '('<expr>')' | <fact>
         '''
         if self._accept('FACT'):
-            return self.graph.addNode(self.current_token.value)
+            return self.graph.addFact(self.current_token.value)
         elif self._accept('LB'):
             expr_value = self._expr()
             self._expect('RB')
@@ -193,30 +217,8 @@ class GraphCreator:
         else:
             raise SequenceError('Expected a FACT or a Left Brace')
 
-    def addOperator(self, left_n, right_n, label):
-#        if left_n.label != label and right_n.label != label:
-            o = Operator(label)
-            o.addParents(left_n, right_n)
-            return o
-#        elif left_n.label == label:
-#            left_n.addParents(right_n)
-#            return left_n
-#        else:
-#            right_n.addParents(left_n)
-#            return right_n
-
-    def addNot(self, node):
-        if self.side == 'LEFT':
-            return Operator('NOT', node)
-        else:
-            o = Operator('NOT')
-            node.addParents(o)
-            return o
 
 class SequenceError(Exception):
-    pass
-
-class TokenError(Exception):
     pass
 
 class ArgumentError(Exception):
