@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
-import sys
 import re
 import collections
+
+from node import Node, Fact, Operator
+from exceptions import ArgumentError, SequenceError
 from tokenizer import tokengenerator
 
 Token = collections.namedtuple('Token', ['type_', 'value'])
@@ -43,60 +45,6 @@ class Graph:
         # Do stuff here ?
         print("Node '" + node.label + "' updated")
 
-class Node:
-    '''
-    Attributes:
-    children    : [ Node, ... ]
-    label       : 'A', 'B', ... , 'Z'
-    parents     : (Node, Node) || (Node, None) || (None, None)
-    value       : 'U' or 'T' or 'F' (default: 'U')
-
-    Methods:
-    addChildren : (children=[ Node, ... ]) => Node
-    setParents  : (parent1=Node, parent2=Node) => Node
-    '''
-    def __init__(self, label):
-        self.children = []
-        self.label = label
-        self.parents = (None, None)
-        self.value = 'U'
-        print("Node '" + label + "' created")
-
-    def addChildren(self, children=[]):
-        self.children += children
-        return self
-
-    def setParents(self, parent1=None, parent2=None):
-        self.parents = (parent1, parent2)
-        return self
-
-
-class Fact(Node):
-    '''
-    label   : 'A', 'B', ... , 'Z'
-
-    example:
-    children = [ Operator('AND') ]
-    label   = 'A'
-    parents = ( Operator('NOT'), None )
-    value   = 'T'
-    '''
-    def __init__(self, label):
-        super().__init__(label)
-
-
-class Operator(Node):
-    '''
-    label   : 'NOT' || 'AND' || 'OR' || 'XOR' || 'IMP' || 'IFF'
-
-    example:
-    children = [ Operator('IMP') ]
-    label   = 'AND'
-    parents = ( Fact('A'), Fact('B') )
-    value   = 'F'
-    '''
-    def __init__(self, label):
-        super().__init__(label)
 
 class GraphCreator:
     '''
@@ -216,27 +164,3 @@ class GraphCreator:
             return expr_value
         else:
             raise SequenceError('Expected a FACT or a Left Brace')
-
-
-class SequenceError(Exception):
-    pass
-
-class ArgumentError(Exception):
-    pass
-
-def main(argv):
-    if len(argv) != 2:
-        raise ArgumentError('Only one argument is needed.')
-    e = GraphCreator()
-    graph = e.parse('A + B => C')
-    graph = e.parse('C | D => E', graph)
-
-if __name__ == "__main__":
-    try:
-	    main(sys.argv)
-    except Exception as e:
-        print('Error : ' + str(e))
-        '''
-        A => B + C
-        D => C
-        '''

@@ -4,13 +4,12 @@ import sys
 import re
 import collections
 
+from exceptions import TokenError
+
 Token = collections.namedtuple('Token', ['type_', 'value'])
 
-class TokenError(Exception):
-    pass
-
 def tokengenerator(expr, tokens_spec):
-    '''
+    r'''
     Token Generator
 
     Example of a token specification list:
