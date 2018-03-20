@@ -5,7 +5,8 @@ import re
 import collections
 from tokenizer import tokengenerator
 
-Token = collections.namedtuple('Token', ['type_', 'value']) #Where should I put this ?
+Token = collections.namedtuple('Token', ['type_', 'value'])
+
 class ExprEvaluator:
     '''
     Implementation of a simple recursive descent parser in the frame
