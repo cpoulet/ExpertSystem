@@ -106,12 +106,12 @@ class GraphCreator:
         left_value = self._expr()
         if self._accept('IMP'):
             self.side = 'RIGHT'
-            return self._expr().addParents(left_value)
+            return self._expr().setParents(left_value)
         elif self._accept('EQ'):
             print('Don\'t work properly')
             right_value = self._expr() 
-            left_value.addParents(right_value)
-            return right_value.addParents(left_value)
+            left_value.setParents(right_value)
+            return right_value.setParents(left_value)
         else:
             raise SequenceError('Expected => or <=>')
 
