@@ -1,10 +1,12 @@
+from exceptions import ContradictionError
+
 class Node:
     '''
     Attributes:
     children    : [ Node, ... ]
     label       : 'A', 'B', ... , 'Z'
     parents     : (Node, Node) || (Node, None) || (None, None)
-    value       : 'U' or 'T' or 'F' (default: 'U')
+    value       : 'U' or 'T' or 'F' (default: 'F')
 
     Methods:
     addChildren : (children=[ Node, ... ]) => Node
@@ -14,7 +16,8 @@ class Node:
         self.children = []
         self.label = label
         self.parents = (None, None)
-        self.value = 'U'
+        self.value = 'F'
+        self._set = False
         print("Node '" + label + "' created")
 
     def addChildren(self, children=[]):
@@ -25,6 +28,12 @@ class Node:
         self.parents = (parent1, parent2)
         return self
 
+    def setValue(self, value):
+        if self._set and self.value != value:
+            raise ContradictionError('Two rules are in contradiction.')
+        self._set = True
+        self.value = value
+        return self.value
 
 class Fact(Node):
     '''
@@ -39,6 +48,13 @@ class Fact(Node):
     def __init__(self, label):
         super().__init__(label)
 
+    def __repr__(self):
+        if self.parents[1]:
+            return "Fact: label({}) parents({},{}) value({})".format(self.label, self.parents[0].label, self.parents[1].label, self.value)
+        if self.parents[0]:
+            return "Fact: label({}) parents({}) value({})".format(self.label, self.parents[0].label, self.value)
+        else:
+            return "Fact: label({}) value({})".format(self.label, self.value)
 
 class Operator(Node):
     '''
@@ -52,3 +68,9 @@ class Operator(Node):
     '''
     def __init__(self, label):
         super().__init__(label)
+
+    def __repr__(self):
+        if self.parents[1]:
+            return "Operator: label({}) parents({},{}) value({})".format(self.label, self.parents[0].label, self.parents[1].label, self.value)
+        else:
+            return "Operator: label({}) parents({}) value({})".format(self.label, self.parents[0].label, self.value)

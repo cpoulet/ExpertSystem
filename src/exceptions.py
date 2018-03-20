@@ -6,3 +6,12 @@ class SequenceError(Exception):
 
 class TokenError(Exception):
     pass
+
+class ContradictionError(Exception):
+    pass
+
+class GraphError(Exception):
+    pass
+
+class ParsingError(Exception):
+    pass
