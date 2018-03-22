@@ -74,7 +74,8 @@ class Expertsystem:
             else:
                 print(q, 'is F')
 
-    def askNode(self, node):
+    def askNode(self, node, seen=set()):
+        seen.add(node.label)
         if self._verbose:
             print('Asking', node)
         if not node.parents:
@@ -82,12 +83,13 @@ class Expertsystem:
         if type(node) is Operator:
             return node.setValue(self._evalOperator(node))
         for p in node.parents:
-            if p:
-                return self.askNode(p)
-        raise GraphError('This graph is not possible')
+            if p.label not in seen:
+                node.setValue(self.askNode(p))
+        return node.value
 
     def _evalOperator(self, operator):
-        #A faire plus propre
+        
+        # cas particulier a gerer ici : C + E => A | B
         if operator.children:
             return self.askNode(operator.parents[0])
 
