@@ -65,7 +65,7 @@ class Expertsystem:
             self._gCreator.parse(rules, self._gCreator.graph)
         for l in self._leafs:
             if l in self._gCreator.graph.nodes:
-                self._gCreator.graph.nodes[l].setValue('T')
+                self._gCreator.graph.nodes[l].setValue('True')
 
     def answerQueries(self):
         for q in self._queries:
@@ -97,10 +97,10 @@ class Expertsystem:
             left = self.askNode(operator.parents[0])
             if self._verbose:
                 print('Evaluating NOT with', left)
-            if left == 'T':
-                return 'F'
-            elif left == 'F':
-                return 'T'
+            if left == 'True':
+                return 'False'
+            elif left == 'False':
+                return 'True'
             else:
                 return 'U'
 
@@ -109,24 +109,24 @@ class Expertsystem:
             right = self.askNode(operator.parents[1])
             if self._verbose:
                 print('Evaluating AND with', operator.parents[0].label, '=', left, 'and', operator.parents[1].label, '=', right)
-            if left == 'F' or right == 'F':
-                return 'F'
+            if left == 'False' or right == 'False':
+                return 'False'
             if left == 'U' or right == 'U':
                 return 'U'
             else:
-                return 'T'
+                return 'True'
 
         if operator.label == 'OR':
             left = self.askNode(operator.parents[0])
             right = self.askNode(operator.parents[1])
             if self._verbose:
                 print('Evaluating OR with', operator.parents[0].label, '=', left, 'and', operator.parents[1].label, '=', right)
-            if left == 'T' or right == 'T':
-                return 'T'
+            if left == 'True' or right == 'True':
+                return 'True'
             if left == 'U' or right == 'U':
                 return 'U'
             else:
-                return 'F'
+                return 'False'
 
         if operator.label == 'XOR':
             left = self.askNode(operator.parents[0])
@@ -136,9 +136,9 @@ class Expertsystem:
             if left == 'U' or right == 'U':
                 return 'U'
             if left == right:
-                return 'F'
+                return 'False'
             else:
-                return 'T'
+                return 'True'
         
         raise GraphError('This graph is not possible')
 

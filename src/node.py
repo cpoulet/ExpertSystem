@@ -6,7 +6,7 @@ class Node:
     label       : 'A', 'B', ... , 'Z'
     parents     : [ Node, ... ]
     children    : [ Node, ... ]
-    value       : 'U' or 'T' or 'F' (default: 'F')
+    value       : 'U' or 'True' or 'False' (default: 'False')
 
     Methods:
     addChildren : (children=[ Node, ... ]) => Node
@@ -16,7 +16,7 @@ class Node:
         self.children = []
         self.label = label
         self.parents = []
-        self.value = 'F'
+        self.value = 'False'
         self._set = False
         self.verbose = verbose
         if self.verbose:
@@ -47,7 +47,7 @@ class Fact(Node):
     children = [ Operator('AND') ]
     label   = 'A'
     parents = ( Operator('NOT'), None )
-    value   = 'T'
+    value   = 'True'
     '''
     def __init__(self, label, verbose=False):
         super().__init__(label, verbose)
@@ -63,7 +63,7 @@ class Operator(Node):
     children = [ Operator('IMP') ]
     label   = 'AND'
     parents = ( Fact('A'), Fact('B') )
-    value   = 'F'
+    value   = 'False'
     '''
     def __init__(self, label, verbose=False):
         super().__init__(label, verbose)
