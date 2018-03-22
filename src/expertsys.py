@@ -31,7 +31,7 @@ class Expertsystem:
         self._leafs         = []
         self._queries       = []
         self._knowledges    = []
-        self._gCreator      = GraphCreator()
+        self._gCreator      = GraphCreator(verbose)
 
     def parseFile(self, input_):
         with open(input_, 'r') as f:
@@ -55,23 +55,30 @@ class Expertsystem:
                     s = re.search(r'(^[A-Z+|()!^]+)(<?)=>([A-Z+|()!^]+$)', l)
                     if not s:
                         raise ParsingError('Wrong rules')
-                    self._knowledges.append(s.string)
+                    self._knowledges.append(s[1] + '=>' + s[3])
+                    if s[2] == '<':
+                        self._knowledges.append(s[3] + '=>' + s[1])
+
+        self._createGraph()
+
+    def _createGraph(self):
         for rules in self._knowledges:
             self._gCreator.parse(rules, self._gCreator.graph)
-        self._initFact()
-
-    def _initFact(self):
         for l in self._leafs:
-            self._gCreator.graph.nodes[l].setValue('T')
+            if l in self._gCreator.graph.nodes:
+                self._gCreator.graph.nodes[l].setValue('T')
 
     def answerQueries(self):
         for q in self._queries:
-            print(q, 'is', self.askNode(self._gCreator.graph.nodes[q]))
+            if q in self._gCreator.graph.nodes:
+                print(q, 'is', self.askNode(self._gCreator.graph.nodes[q]))
+            else:
+                print(q, 'is F')
 
     def askNode(self, node):
         if self._verbose:
             print('Asking', node)
-        if node.parents == (None, None):
+        if not node.parents:
             return node.value
         if type(node) is Operator:
             return node.setValue(self._evalOperator(node))

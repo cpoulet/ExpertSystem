@@ -19,44 +19,42 @@ class Graph:
         'F': <graph.Node at 0x104e71f60>
     }
     '''
-    def __init__(self):
+    def __init__(self, verbose=False):
         self.nodes = {}
+        self.operators = []
+        self.verbose = verbose
 
     def checkNode(self, label):
         return label in self.nodes
 
     def addFact(self, label):
         if not self.checkNode(label):
-            self.nodes[label] = Fact(label)
+            self.nodes[label] = Fact(label, self.verbose)
         return self.nodes[label]
 
     def addOperator(self, label, leftNode=None, rightNode=None, side=True):
         if side:
-            o = Operator(label)
-            o.setParents(leftNode, rightNode)
+            o = Operator(label, self.verbose)
+            o.addParents(leftNode, rightNode)
         else:
-            o = Operator(label)
-            o.addChildren([leftNode, rightNode])
+            o = Operator(label, self.verbose)
+            o.addChildren(leftNode, rightNode)
+        self.operators.append(o)
         return o
-
-    def updateNode(self, node):
-        # Do stuff here ?
-        print("Node '" + node.label + "' updated")
-
 
 class GraphCreator:
     '''
-    <rule>      ::= <expr> ('=>' | '<=>') <expr>
+    <rule>      ::= <expr> '=>' <expr>
     <expr>      ::= <or> {'^' <expr>}
     <or>        ::= <and> {'|' <or>}
     <and>       ::= <factor> {'+' <and>}
     <not>       ::= '!'<not> | <factor>
     <factor>    ::= '('<expr>')' | FACT
     '''
-    def __init__(self):
-        self.graph = Graph()
+    def __init__(self, verbose=False):
+        self.verbose = verbose
+        self.graph = Graph(verbose)
         self.TOKENS_SPEC = [
-        ('IFF' , r'\<\=\>'),
         ('IMP' , r'\=\>'),
         ('OR' , r'\|'),
         ('AND' , r'\+'),
@@ -100,18 +98,13 @@ class GraphCreator:
 
     def _rule(self):
         '''
-        <rule>      ::= <expr> ('=>' | '<=>') <expr>
+        <rule>      ::= <expr> '=>' <expr>
         '''
-        self.side = 'LEFT'
+        self.side = True
         left_value = self._expr()
         if self._accept('IMP'):
-            self.side = 'RIGHT'
-            return self._expr().setParents(left_value)
-        elif self._accept('EQ'):
-            print('Don\'t work properly')
-            right_value = self._expr() 
-            left_value.setParents(right_value)
-            return right_value.setParents(left_value)
+            self.side = False
+            return self._expr().addParents(left_value)
         else:
             raise SequenceError('Expected => or <=>')
 
@@ -121,7 +114,7 @@ class GraphCreator:
         '''
         expr_value = self._or()
         while self._accept('XOR'):
-            return self.graph.addOperator('XOR', leftNode=expr_value, rightNode=self._expr())
+            return self.graph.addOperator('XOR', leftNode=expr_value, rightNode=self._expr(), side=self.side)
         return expr_value
             
     def _or(self):
@@ -130,7 +123,7 @@ class GraphCreator:
         '''
         or_value = self._and()
         while self._accept('OR'):
-            return self.graph.addOperator('OR', leftNode=or_value, rightNode=self._or())
+            return self.graph.addOperator('OR', leftNode=or_value, rightNode=self._or(), side=self.side)
         return or_value
         
     def _and(self):
@@ -139,7 +132,7 @@ class GraphCreator:
         '''
         and_value = self._not()
         while self._accept('AND'):
-            return self.graph.addOperator('AND', leftNode=and_value, rightNode=self._and())
+            return self.graph.addOperator('AND', leftNode=and_value, rightNode=self._and(), side=self.side)
         return and_value
 
     def _not(self):
@@ -147,7 +140,7 @@ class GraphCreator:
         <not> ::= '!'<not> | <factor>
         '''
         if self._accept('NOT'):
-            return self.graph.addOperator('NOT', leftNode=self._not())
+            return self.graph.addOperator('NOT', leftNode=self._not(), side=self.side)
         return self._factor()
 
     def _factor(self):

@@ -3,29 +3,31 @@ from exceptions import ContradictionError
 class Node:
     '''
     Attributes:
-    children    : [ Node, ... ]
     label       : 'A', 'B', ... , 'Z'
-    parents     : (Node, Node) || (Node, None) || (None, None)
+    parents     : [ Node, ... ]
+    children    : [ Node, ... ]
     value       : 'U' or 'T' or 'F' (default: 'F')
 
     Methods:
     addChildren : (children=[ Node, ... ]) => Node
-    setParents  : (parent1=Node, parent2=Node) => Node
+    addParents  : (parents=[ Node, ... ])  => Node
     '''
-    def __init__(self, label):
+    def __init__(self, label, verbose=False):
         self.children = []
         self.label = label
-        self.parents = (None, None)
+        self.parents = []
         self.value = 'F'
         self._set = False
-        print("Node '" + label + "' created")
+        self.verbose = verbose
+        if self.verbose:
+            print("Node '" + label + "' created")
 
-    def addChildren(self, children=[]):
+    def addChildren(self, *children):
         self.children += children
         return self
 
-    def setParents(self, parent1=None, parent2=None):
-        self.parents = (parent1, parent2)
+    def addParents(self, *parents):
+        self.parents += parents
         return self
 
     def setValue(self, value):
@@ -45,16 +47,11 @@ class Fact(Node):
     parents = ( Operator('NOT'), None )
     value   = 'T'
     '''
-    def __init__(self, label):
-        super().__init__(label)
+    def __init__(self, label, verbose=False):
+        super().__init__(label, verbose)
 
     def __repr__(self):
-        if self.parents[1]:
-            return "Fact: label({}) parents({},{}) value({})".format(self.label, self.parents[0].label, self.parents[1].label, self.value)
-        if self.parents[0]:
-            return "Fact: label({}) parents({}) value({})".format(self.label, self.parents[0].label, self.value)
-        else:
-            return "Fact: label({}) value({})".format(self.label, self.value)
+        return "Fact: label({}) value({})".format(self.label, self.value)
 
 class Operator(Node):
     '''
@@ -66,11 +63,8 @@ class Operator(Node):
     parents = ( Fact('A'), Fact('B') )
     value   = 'F'
     '''
-    def __init__(self, label):
-        super().__init__(label)
+    def __init__(self, label, verbose=False):
+        super().__init__(label, verbose)
 
     def __repr__(self):
-        if self.parents[1]:
-            return "Operator: label({}) parents({},{}) value({})".format(self.label, self.parents[0].label, self.parents[1].label, self.value)
-        else:
-            return "Operator: label({}) parents({}) value({})".format(self.label, self.parents[0].label, self.value)
+        return "Operator: label({}) value({})".format(self.label, self.value)
