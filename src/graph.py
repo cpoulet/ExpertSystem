@@ -38,8 +38,10 @@ class Graph:
         else:
             o = Operator(label, self.verbose)
             o.addChildren(leftNode, rightNode)
-            leftNode.addParents(o)
-            rightNode.addParents(o)
+            if leftNode:
+                leftNode.addParents(o)
+            if rightNode:
+                rightNode.addParents(o)
         return o
 
 class GraphCreator:
