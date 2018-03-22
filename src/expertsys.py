@@ -6,30 +6,19 @@ import os
 import collections
 
 from node import *
+from color import Color
 from graph import GraphCreator
 from tokenizer import tokengenerator
 from exceptions import GraphError, ParsingError
 
 Token = collections.namedtuple('Token', ['type_', 'value'])
 
-class Color:
-    def color(self, string):
-        return self.red(string) if string == 'False' else self.green(string) if  string == 'True' else self.yellow(string)
-    def red(self, string):
-        return '\033[1;31m' + string + '\033[1;0m'
-    def green(self, string):
-        return '\033[1;32m' + string + '\033[1;0m'
-    def yellow(self, string):
-        return '\033[1;33m' + string + '\033[1;0m'
-    def white(self, string):
-        return '\033[1;37m' + string + '\033[1;0m'
-
 class Expertsystem:
 
     def __init__(self, verbose = False):
         self._verbose       = verbose
-        self._leafs         = []
-        self._queries       = []
+        self._leafs         = None
+        self._queries       = None
         self._knowledges    = []
         self._gCreator      = GraphCreator(verbose)
 
@@ -58,7 +47,12 @@ class Expertsystem:
                     self._knowledges.append(s[1] + '=>' + s[3])
                     if s[2] == '<':
                         self._knowledges.append(s[3] + '=>' + s[1])
+        self._checkParsing()
         self._createGraph()
+
+    def _checkParsing(self):
+        if self._leafs == None or self._queries == None or self._knowledges == []:
+            raise ParsingError('Missing input data')
 
     def _createGraph(self):
         for rules in self._knowledges:
@@ -68,11 +62,12 @@ class Expertsystem:
                 self._gCreator.graph.nodes[l].setValue('True')
 
     def answerQueries(self):
+        C = Color()
         for q in self._queries:
             if q in self._gCreator.graph.nodes:
-                print(q, 'is', self.askNode(self._gCreator.graph.nodes[q]))
+                print(q + ' is ' + C.color(self.askNode(self._gCreator.graph.nodes[q])))
             else:
-                print(q, 'is F')
+                print(q + ' is ' + C.color('False'))
 
     def askNode(self, node, seen=set()):
         seen.add(node.label)
@@ -84,15 +79,11 @@ class Expertsystem:
             return node.setValue(self._evalOperator(node))
         for p in node.parents:
             if p.label not in seen:
-                node.setValue(self.askNode(p))
+                node.setValue(self.askNode(p, seen))
         return node.value
 
     def _evalOperator(self, operator):
         
-        # cas particulier a gerer ici : C + E => A | B
-        if operator.children:
-            return self.askNode(operator.parents[0])
-
         if operator.label == 'NOT':
             left = self.askNode(operator.parents[0])
             if self._verbose:
@@ -102,7 +93,11 @@ class Expertsystem:
             elif left == 'False':
                 return 'True'
             else:
-                return 'U'
+                return 'Undefined'
+
+        if operator.children:
+            value = self.askNode(operator.parents[0])
+            return self._solve(operator, value)
 
         if operator.label == 'AND':
             left = self.askNode(operator.parents[0])
@@ -111,8 +106,8 @@ class Expertsystem:
                 print('Evaluating AND with', operator.parents[0].label, '=', left, 'and', operator.parents[1].label, '=', right)
             if left == 'False' or right == 'False':
                 return 'False'
-            if left == 'U' or right == 'U':
-                return 'U'
+            if left == 'Undefined' or right == 'Undefined':
+                return 'Undefined'
             else:
                 return 'True'
 
@@ -123,8 +118,8 @@ class Expertsystem:
                 print('Evaluating OR with', operator.parents[0].label, '=', left, 'and', operator.parents[1].label, '=', right)
             if left == 'True' or right == 'True':
                 return 'True'
-            if left == 'U' or right == 'U':
-                return 'U'
+            if left == 'Undefined' or right == 'Undefined':
+                return 'Undefined'
             else:
                 return 'False'
 
@@ -133,14 +128,27 @@ class Expertsystem:
             right = self.askNode(operator.parents[1])
             if self._verbose:
                 print('Evaluating XOR with', operator.parents[0].label, '=', left, 'and', operator.parents[1].label, '=', right)
-            if left == 'U' or right == 'U':
-                return 'U'
+            if left == 'Undefined' or right == 'Undefined':
+                return 'Undefined'
             if left == right:
                 return 'False'
             else:
                 return 'True'
         
         raise GraphError('This graph is not possible')
+
+    def _solve(self, node, value):
+
+        if type(node) is Fact:
+            return node.setValue(value)
+
+        if (node.label == 'AND' and value == 'True') or (node.label == 'OR' and value == 'False'):
+            for child in node.children:
+                self._solve(child, value)
+            return value
+        
+        else:
+            return 'Undefined'
 
 def main():
     parser = argparse.ArgumentParser(description='Read a Knowledge base then answer the queries.')
