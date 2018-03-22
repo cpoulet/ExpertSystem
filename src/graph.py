@@ -21,7 +21,6 @@ class Graph:
     '''
     def __init__(self, verbose=False):
         self.nodes = {}
-        self.operators = []
         self.verbose = verbose
 
     def checkNode(self, label):
@@ -39,7 +38,8 @@ class Graph:
         else:
             o = Operator(label, self.verbose)
             o.addChildren(leftNode, rightNode)
-        self.operators.append(o)
+            leftNode.addParents(o)
+            rightNode.addParents(o)
         return o
 
 class GraphCreator:

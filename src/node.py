@@ -35,6 +35,8 @@ class Node:
             raise ContradictionError('Two rules are in contradiction.')
         self._set = True
         self.value = value
+        if self.verbose:
+            print('Node', self.label, 'is now', self.value)
         return self.value
 
 class Fact(Node):

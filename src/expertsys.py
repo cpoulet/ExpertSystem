@@ -58,7 +58,6 @@ class Expertsystem:
                     self._knowledges.append(s[1] + '=>' + s[3])
                     if s[2] == '<':
                         self._knowledges.append(s[3] + '=>' + s[1])
-
         self._createGraph()
 
     def _createGraph(self):
@@ -89,6 +88,9 @@ class Expertsystem:
 
     def _evalOperator(self, operator):
         #A faire plus propre
+        if operator.children:
+            return self.askNode(operator.parents[0])
+
         if operator.label == 'NOT':
             left = self.askNode(operator.parents[0])
             if self._verbose:
