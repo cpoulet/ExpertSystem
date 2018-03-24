@@ -65,12 +65,16 @@ class Expertsystem:
         C = Color()
         for q in self._queries:
             if q in self._gCreator.graph.nodes:
+                self._seen = set()
                 print(q + ' is ' + C.color(self.askNode(self._gCreator.graph.nodes[q])))
             else:
                 print(q + ' is ' + C.color('False'))
 
-    def askNode(self, node, seen=set()):
-        seen.add(node.label)
+    def askNode(self, node):
+        if node.label in self._seen:
+            return node.value
+        if type(node) is Fact:
+            self._seen.add(node.label)
         if self._verbose:
             print('Asking', node)
         if not node.parents:
@@ -78,8 +82,8 @@ class Expertsystem:
         if type(node) is Operator:
             return node.setValue(self._evalOperator(node))
         for p in node.parents:
-            if p.label not in seen:
-                node.setValue(self.askNode(p, seen))
+            if p.label:
+                node.setValue(self.askNode(p))
         return node.value
 
     def _evalOperator(self, operator):
