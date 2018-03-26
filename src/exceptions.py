@@ -15,3 +15,7 @@ class GraphError(Exception):
 
 class ParsingError(Exception):
     pass
+
+class InputError(Exception):
+    pass
+

@@ -1,11 +1,7 @@
-#!/usr/bin/env python3
-
-import argparse
 import re
-import os
 import collections
 
-from node import *
+from node import Fact, Operator
 from color import Color
 from graph import GraphCreator
 from tokenizer import tokengenerator
@@ -79,7 +75,7 @@ class Expertsystem:
         return out
 
     def askNode(self, node):
-        if node.label in self._seen:
+        if node.label in self._seen or node.value is 'True':
             return node.value
         if type(node) is Fact:
             self._seen.add(node.label)
@@ -90,7 +86,7 @@ class Expertsystem:
         if type(node) is Operator:
             return node.setValue(self._evalOperator(node))
         for p in node.parents:
-            if p.label:
+            if p.label not in self._seen:
                 node.setValue(self.askNode(p))
         return node.value
 
@@ -161,20 +157,3 @@ class Expertsystem:
         
         else:
             return 'Undefined'
-
-def main():
-    parser = argparse.ArgumentParser(description='Read a Knowledge base then answer the queries.')
-    parser.add_argument('input', action='store', help='Input file describing the rules.')
-    parser.add_argument('-v', '--verbose', action='store_true', help='verbose mode')
-    args = parser.parse_args()
-    if not os.path.exists(args.input) or not os.path.isfile(args.input):
-        raise InputError('File not found: "' + args.input + '".')
-    e = Expertsystem(args.verbose)
-    e.parseFile(args.input)
-    d = e.answerQueries()
-
-if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        print('Error : ' + str(e))

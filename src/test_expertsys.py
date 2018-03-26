@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import unittest
-from expertsys import *
-from exceptions import *
+from expertsys import Expertsystem
+from exceptions import SequenceError, ParsingError, ContradictionError
 
 class MyTest(unittest.TestCase):
     """Tests for my ExprSystem."""
@@ -33,9 +33,9 @@ class MyTest(unittest.TestCase):
         self.e.parseFile('../test/test_error/error_rule_2.txt')
         self.assertRaises(ContradictionError, self.e.answerQueries)
 
-#    def test_error_then_1(self):
-#        self.e.parseFile('../test/test_error/error_then_1.txt')
-#        self.assertRaises(ThenError, self.e.answerQueries)
+    def test_space_2(self):
+       self.e.parseFile('../test/test_space/space_2.txt')
+       self.assertDictEqual(self.e.answerQueries(), {'A': 'True', 'B': 'True'})
 
     def test_simple_1(self):
         self.e.parseFile('../test/test_simple/simple_1.txt')
