@@ -86,7 +86,7 @@ class Expertsystem:
         if type(node) is Operator:
             return node.setValue(self._evalOperator(node))
         for p in node.parents:
-            if p.label not in self._seen:
+            if p.label:
                 node.setValue(self.askNode(p))
         return node.value
 
