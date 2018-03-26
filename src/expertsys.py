@@ -15,8 +15,9 @@ Token = collections.namedtuple('Token', ['type_', 'value'])
 
 class Expertsystem:
 
-    def __init__(self, verbose = False):
+    def __init__(self, verbose = False, quiet = False):
         self._verbose       = verbose
+        self._quiet         = quiet
         self._leafs         = None
         self._queries       = None
         self._knowledges    = []
@@ -63,12 +64,19 @@ class Expertsystem:
 
     def answerQueries(self):
         C = Color()
+        out = {}
         for q in self._queries:
             if q in self._gCreator.graph.nodes:
                 self._seen = set()
-                print(q + ' is ' + C.color(self.askNode(self._gCreator.graph.nodes[q])))
+                value = self.askNode(self._gCreator.graph.nodes[q])
+                out[q] = value
+                if not self._quiet:
+                    print(q + ' is ' + C.color(value))
             else:
-                print(q + ' is ' + C.color('False'))
+                out[q] = 'False'
+                if not self._quiet:
+                    print(q + ' is ' + C.color('False'))
+        return out
 
     def askNode(self, node):
         if node.label in self._seen:

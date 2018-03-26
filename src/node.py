@@ -31,7 +31,7 @@ class Node:
         return self
 
     def setValue(self, value):
-        if self._set and self.value != value and self.value != 'Undefined':
+        if self._set and self.value != value and self.value != 'Undefined' and value != 'Undefined':
             raise ContradictionError('Two rules are in contradiction.')
         if self._set and value == 'Undefined':
             return self.value
